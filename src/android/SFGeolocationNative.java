@@ -5,6 +5,7 @@ import java.util.Date;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,7 +31,7 @@ public class SFGeolocationNative extends CordovaPlugin {
 	private String LOCATION_PROVIDER = "";
 	LocationListener locationListener;
 	private boolean listenerON = false;
-	private JSONArray arrayGPS = new JSONArray();
+	private PluginResult result;
 	private JSONObject objGPS = new JSONObject();
 
 	@Override
@@ -81,15 +82,17 @@ public class SFGeolocationNative extends CordovaPlugin {
 							objGPS.put("formatTime", datetime);
 							objGPS.put("extra", null);
 
-							if (arrayGPS.length() == 0) {
-								arrayGPS.put(objGPS);
-							}
+							result = new PluginResult(PluginResult.Status.OK, objGPS);
+			                result.setKeepCallback(true);
+			                callbackContext.sendPluginResult(result);
+							Log.e("GPS-LOCATION-ARRAY", objGPS.toString());
 
-							Log.e("GPS-LOCATION-ARRAY", arrayGPS.toString());
-
-							callbackContext.success(arrayGPS);
+							
 
 						} catch (JSONException e) {
+							PluginResult result = new PluginResult(PluginResult.Status.JSON_EXCEPTION);
+	                        result.setKeepCallback(true);
+	                        callbackContext.sendPluginResult(result);
 							e.printStackTrace();
 							callbackContext.error(e.toString());
 						}
@@ -137,7 +140,7 @@ public class SFGeolocationNative extends CordovaPlugin {
 				listenerON = true;
 
 				// Register the listener with the Location Manager to receive location updates
-				locationManager.requestLocationUpdates(LOCATION_PROVIDER, 1L, 1.0f, locationListener);
+				locationManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
 				return true;
 
 			} else {
