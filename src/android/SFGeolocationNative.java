@@ -5,7 +5,7 @@ import java.util.Date;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.PluginResult;
+import org.apache.cordova.api.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,31 +50,26 @@ public class SFGeolocationNative extends CordovaPlugin {
 			if (!isGPSEnabled && !isNetworkEnabled) {
 				// no network provider is enabled
 			} else {
+				Location loc = null;
 				if (isGPSEnabled) {
 					LOCATION_PROVIDER = LocationManager.GPS_PROVIDER;
 
-					Location loc = null;
-					if (isGPSEnabled) {
+					mLocManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
+					LocationManager locationmanager = mLocManager;
+
+					if (locationmanager != null) {
+						loc = mLocManager.getLastKnownLocation("gps");
+					}
+				} else {
+					if (isNetworkEnabled) {
+						LOCATION_PROVIDER = LocationManager.NETWORK_PROVIDER;
+
 						mLocManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
 						LocationManager locationmanager = mLocManager;
 
 						if (locationmanager != null) {
-							loc = mLocManager.getLastKnownLocation("gps");
+							loc = mLocManager.getLastKnownLocation("network");
 						}
-					}
-					
-		            if (loc == null) {
-						LOCATION_PROVIDER = LocationManager.NETWORK_PROVIDER;
-
-						if (isNetworkEnabled) {
-							mLocManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
-							LocationManager locationmanager = mLocManager;
-
-							if (locationmanager != null) {
-								loc = mLocManager.getLastKnownLocation("network");
-							}
-						}
-
 					}
 				}
 			}
