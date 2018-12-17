@@ -33,27 +33,49 @@ public class SFGeolocationNative extends CordovaPlugin {
 	private boolean listenerON = false;
 	private PluginResult result;
 	private JSONObject objPosition = new JSONObject();
+	private LocationManager mLocManager;
 
 	@Override
 	public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
 		if (action.equals("getCurrentLocation")) {
-			LocationManager locationManager = (LocationManager) this.cordova.getActivity()
+			mLocManager = (LocationManager) this.cordova.getActivity()
 					.getSystemService(Context.LOCATION_SERVICE);
 
 			// getting GPS status
-			isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+			isGPSEnabled = mLocManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
 			// getting network status
-			isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+			isNetworkEnabled = mLocManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
 			if (!isGPSEnabled && !isNetworkEnabled) {
 				// no network provider is enabled
 			} else {
 				if (isGPSEnabled) {
 					LOCATION_PROVIDER = LocationManager.GPS_PROVIDER;
-				}
-				if (isNetworkEnabled) {
-					LOCATION_PROVIDER = LocationManager.NETWORK_PROVIDER;
+
+					Location loc = null;
+					if (isGPSEnabled) {
+						mLocManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
+						LocationManager locationmanager = mLocManager;
+
+						if (locationmanager != null) {
+							loc = mLocManager.getLastKnownLocation("gps");
+						}
+					}
+					
+		            if (loc == null) {
+						LOCATION_PROVIDER = LocationManager.NETWORK_PROVIDER;
+
+						if (isNetworkEnabled) {
+							mLocManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
+							LocationManager locationmanager = mLocManager;
+
+							if (locationmanager != null) {
+								loc = mLocManager.getLastKnownLocation("network");
+							}
+						}
+
+					}
 				}
 			}
 
@@ -80,11 +102,7 @@ public class SFGeolocationNative extends CordovaPlugin {
 							objPosition.put("time", location.getTime());
 							objPosition.put("location_provider", location.getProvider());
 							objPosition.put("formatTime", datetime);
-							if (location.isFromMockProvider() == true) {
-								objPosition.put("is_mocked", true);
-							} else {
-								objPosition.put("is_mocked", false);
-							}
+							objPosition.put("extra", null);
 
 							result = new PluginResult(PluginResult.Status.OK, objPosition);
 			                result.setKeepCallback(true);
@@ -144,9 +162,8 @@ public class SFGeolocationNative extends CordovaPlugin {
 				listenerON = true;
 
 				// Register the listener with the Location Manager to receive location updates
-				locationManager.requestLocationUpdates(LOCATION_PROVIDER, 0, 0, locationListener);
+				locationManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
 				return true;
-
 			} else {
 				PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
 				result.setKeepCallback(true);
