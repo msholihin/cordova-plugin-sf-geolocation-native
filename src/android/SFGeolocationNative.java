@@ -32,7 +32,7 @@ public class SFGeolocationNative extends CordovaPlugin {
 	LocationListener locationListener;
 	private boolean listenerON = false;
 	private PluginResult result;
-	private JSONObject objGPS = new JSONObject();
+	private JSONObject objPosition = new JSONObject();
 
 	@Override
 	public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
@@ -65,27 +65,27 @@ public class SFGeolocationNative extends CordovaPlugin {
 
 						// Called when a new location is found by the network location provider.
 
-						Date dateGPS = new Date(location.getTime());
+						Date datePosition = new Date(location.getTime());
 
-						String datetime = formatDate(dateGPS);
+						String datetime = formatDate(datePosition);
 
-						Log.e("DATA-GPS", "Lat:" + location.getLatitude() + " - Long:" + location.getLongitude()
+						Log.e("DATA-Position", "Lat:" + location.getLatitude() + " - Long:" + location.getLongitude()
 								+ " - Data e hora:" + datetime);
 
 						try {
 
-							objGPS.put("latitude", location.getLatitude());
-							objGPS.put("longitude", location.getLongitude());
-							objGPS.put("accuracy", location.getAccuracy());
-							objGPS.put("time", location.getTime());
-							objGPS.put("location_provider", location.getProvider());
-							objGPS.put("formatTime", datetime);
-							objGPS.put("extra", null);
+							objPosition.put("latitude", location.getLatitude());
+							objPosition.put("longitude", location.getLongitude());
+							objPosition.put("accuracy", location.getAccuracy());
+							objPosition.put("time", location.getTime());
+							objPosition.put("location_provider", location.getProvider());
+							objPosition.put("formatTime", datetime);
+							objPosition.put("extra", null);
 
-							result = new PluginResult(PluginResult.Status.OK, objGPS);
+							result = new PluginResult(PluginResult.Status.OK, objPosition);
 			                result.setKeepCallback(true);
 			                callbackContext.sendPluginResult(result);
-							Log.e("GPS-LOCATION-ARRAY", objGPS.toString());
+							Log.e("GPS-LOCATION-ARRAY", objPosition.toString());
 
 							
 
@@ -144,7 +144,9 @@ public class SFGeolocationNative extends CordovaPlugin {
 				return true;
 
 			} else {
-				callbackContext.success(arrayGPS);
+				PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
+				result.setKeepCallback(true);
+				callbackContext.sendPluginResult(result);
 				return true;
 			}
 		}
