@@ -5,7 +5,7 @@ import java.util.Date;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.api.PluginResult;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,28 +50,10 @@ public class SFGeolocationNative extends CordovaPlugin {
 			if (!isGPSEnabled && !isNetworkEnabled) {
 				// no network provider is enabled
 			} else {
-				Location loc = null;
-				if (isGPSEnabled) {
-					LOCATION_PROVIDER = LocationManager.GPS_PROVIDER;
-
-					mLocManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
-					LocationManager locationmanager = mLocManager;
-
-					if (locationmanager != null) {
-						loc = mLocManager.getLastKnownLocation("gps");
-					}
-				} else {
-					if (isNetworkEnabled) {
-						LOCATION_PROVIDER = LocationManager.NETWORK_PROVIDER;
-
-						mLocManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
-						LocationManager locationmanager = mLocManager;
-
-						if (locationmanager != null) {
-							loc = mLocManager.getLastKnownLocation("network");
-						}
-					}
-				}
+				Location location = getGPSLocation();
+	            if (location == null) {
+	                location = getNetworkLocation();
+	            }
 			}
 
 			if (!listenerON) {
@@ -90,7 +72,6 @@ public class SFGeolocationNative extends CordovaPlugin {
 								+ " - Data e hora:" + datetime);
 
 						try {
-
 							objPosition.put("latitude", location.getLatitude());
 							objPosition.put("longitude", location.getLongitude());
 							objPosition.put("accuracy", location.getAccuracy());
@@ -175,5 +156,27 @@ public class SFGeolocationNative extends CordovaPlugin {
 		String format = formatter.format(date);
 
 		return format;
+	}
+	
+	private Location getGPSLocation() {
+		Location loc = null;
+		mLocManager.requestLocationUpdates("gps", 1000L, 0.0F, locationListener);
+		LocationManager locationmanager = mLocManager;
+
+		if (locationmanager != null) {
+			loc = mLocManager.getLastKnownLocation("gps");
+		}
+		return loc;
+	}
+
+	private Location getNetworkLocation() {
+		Location loc = null;
+		mLocManager.requestLocationUpdates("network", 1000L, 0.0F, locationListener);
+		LocationManager locationmanager = mLocManager;
+
+		if (locationmanager != null) {
+			loc = mLocManager.getLastKnownLocation("network");
+		}
+		return loc;
 	}
 }
