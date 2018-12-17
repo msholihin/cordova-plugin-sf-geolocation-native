@@ -1,5 +1,8 @@
 package com.smartfren.cordova.sfgeolocationnative;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
@@ -7,164 +10,158 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
-public class SFGeolocationNative extends CordovaPlugin implements LocationListener {
-	private LocationManager mLocManager;
-	private Location mLoc;
-	private boolean isGPSenabled;
-	private boolean isGPSActive;
-	private boolean isNetworkEnabled;
-	private boolean isNetworkActive;
-	private double longitude, latitude, accuracy;
-	private String provider;
-	private CallbackContext mCallbackCtx;
-	private boolean result;
+public class SFGeolocationNative extends CordovaPlugin {
+	private int MY_PERMISSIONS_REQUEST = 0;
 
-	@Override
-	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-		mCallbackCtx = callbackContext;
-		try {
-			if (action.equals("getCurrentLocation")) {
-				mLocManager = (LocationManager) this.cordova.getActivity().getSystemService(Context.LOCATION_SERVICE);
+	// flag for GPS status
+	boolean isGPSEnabled = false;
 
-				latitude = 0.0;
-				longitude = 0.0;
-				accuracy = 0.0;
-//				provider = "";
-
-				mLocManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000L, 500.0f, locationListener);
-
-				mLoc = mLocManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-
-				mLoc = getGPSLocation();
-				if (mLoc == null) {
-					mLoc = getNetworkLocation();
-				}
-
-//				jsonObject.put("provider", provider);
-
-				if (latitude != 0.0) {
-					JSONObject jsonObject = new JSONObject();
-					jsonObject.put("latitude", latitude);
-					jsonObject.put("longitude", longitude);
-					jsonObject.put("accuracy", accuracy);
-					callbackContext.success(jsonObject);
-					result = true;
-					return result;
-				} else {
-					mLocManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000L, 500.0f,
-							locationListener);
-
-					mLoc = mLocManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-
-					mLoc = getGPSLocation();
-					if (mLoc == null) {
-						mLoc = getNetworkLocation();
-					}
-					result = false;
-					return result;
-				}
-
-				return result;
-			}
-			return result;
-		} catch (Exception e) {
-			callbackContext.success("---------" + e.getMessage());
-			return false;
-		}
-	}
+	// flag for network status
+	boolean isNetworkEnabled = false;
+	private String LOCATION_PROVIDER = "";
+	LocationListener locationListener;
+	private boolean listenerON = false;
+	private String statusMock = "";
+	private JSONArray arrayGPS = new JSONArray();
+	private JSONObject objGPS = new JSONObject();
 
 	@Override
-	public void onLocationChanged(Location location) {
-		mLoc = location;
+	public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
+        LocationManager locationManager = (LocationManager) this.cordova.getActivity().getSystemService(Context.LOCATION_SERVICE);
+
+        // getting GPS status
+        isGPSEnabled = locationManager
+                .isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        // getting network status
+        isNetworkEnabled = locationManager
+                .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+
+        if(!isGPSEnabled && !isNetworkEnabled) {
+            // no network provider is enabled
+        }else{
+            if(isGPSEnabled){
+                LOCATION_PROVIDER = LocationManager.GPS_PROVIDER;
+            }
+            if(isNetworkEnabled){
+                LOCATION_PROVIDER = LocationManager.NETWORK_PROVIDER;
+            }
+        }
+
+        if(listenerON != true) {
+
+            // Define a listener that responds to location updates
+            locationListener = new LocationListener() {
+                public void onLocationChanged(Location location) {
+
+
+                    // Called when a new location is found by the network location provider.
+
+                    Date dateGPS = new Date(location.getTime());
+
+                    String datetime = formatDate(dateGPS);
+
+                     Log.e("DATA-GPS", "Lat:" + location.getLatitude() + " - Long:" + location.getLongitude() + " - Data e hora:" + datetime);
+
+                     try{
+
+                         objGPS.put("latitude",location.getLatitude());
+                         objGPS.put("longitude",location.getLongitude());
+                         objGPS.put("accuracy", location.getAccuracy());
+                         objGPS.put("time",location.getTime());
+                         objGPS.put("location_provider",location.getProvider());
+                         objGPS.put("formatTime",datetime);
+                         objGPS.put("extra",null);
+
+                         if (location.isFromMockProvider() == true) {
+                             objGPS.put("info","mock-true");
+                             statusMock = "mock-true";
+                         } else {
+                             objGPS.put("info","mock-false");
+                             statusMock = "mock-false";
+                         }
+
+                         if(arrayGPS.length() == 0){
+                             arrayGPS.put(objGPS);
+                         }
+
+                         Log.e("GPS-LOCATION-ARRAY", arrayGPS.toString());
+
+                         callbackContext.success(arrayGPS);
+
+
+                     } catch (JSONException e) {
+                        e.printStackTrace();
+                        callbackContext.error(e.toString());
+                     }
+
+
+                }
+
+                public void onStatusChanged(String provider, int status, Bundle extras) {
+
+                }
+
+                public void onProviderEnabled(String provider) {
+
+                }
+
+                public void onProviderDisabled(String provider) {
+
+                }
+            };
+
+            // Here, thisActivity is the current activity
+            if (ContextCompat.checkSelfPermission(this.cordova.getActivity(),
+                    Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                // Should we show an explanation?
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this.cordova.getActivity(),
+                        Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                    // Show an explanation to the user *asynchronously* -- don't block
+                    // this thread waiting for the user's response! After the user
+                    // sees the explanation, try again to request the permission.
+
+                } else {
+
+                    // No explanation needed, we can request the permission.
+
+                    ActivityCompat.requestPermissions(this.cordova.getActivity(),
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                            MY_PERMISSIONS_REQUEST);
+
+                    // MY_PERMISSIONS_REQUEST is an
+                    // app-defined int constant. The callback method gets the
+                    // result of the request.
+                }
+            }
+
+            listenerON = true;
+
+            // Register the listener with the Location Manager to receive location updates
+            locationManager.requestLocationUpdates(LOCATION_PROVIDER, 15000, 0, locationListener);
+
+        }else{
+            callbackContext.success(arrayGPS);
+        }
 	}
+	
+    private String formatDate(Date date){
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        String format = formatter.format(date);
 
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) {
-	}
-
-	@Override
-	public void onProviderEnabled(String provider) {
-	}
-
-	@Override
-	public void onProviderDisabled(String provider) {
-	}
-
-	private final LocationListener locationListener = new LocationListener() {
-		public void onLocationChanged(Location location) {
-			try {
-			updateWithNewLocation(location);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-
-		public void onProviderDisabled(String provider) {
-			try {
-				updateWithNewLocation(null);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-
-		public void onProviderEnabled(String provider) {
-		}
-
-		public void onStatusChanged(String provider, int status, Bundle extras) {
-		}
-	};
-
-	private void updateWithNewLocation(Location location) throws JSONException {
-		if (location != null) {
-			latitude = location.getLatitude();
-			longitude = location.getLongitude();
-			accuracy = location.getAccuracy();
-//			provider = location.getProvider();
-
-//			JSONObject jsonObject = new JSONObject();
-//			jsonObject.put("latitude", latitude);
-//			jsonObject.put("longitude", longitude);
-//			jsonObject.put("accuracy", accuracy);
-//			jsonObject.put("provider", provider);
-//			mCallbackCtx.success(jsonObject);
-		}
-	}
-
-	private Location getGPSLocation() {
-		isGPSenabled = mLocManager.isProviderEnabled("gps");
-		Location loc = null;
-		if (isGPSenabled) {
-			if (isGPSActive) {
-				mLocManager.requestLocationUpdates("gps", 1000L, 0.0F, this);
-				LocationManager locationmanager = mLocManager;
-
-				if (locationmanager != null) {
-					loc = mLocManager.getLastKnownLocation("gps");
-				}
-			}
-		}
-
-		return loc;
-	}
-
-	private Location getNetworkLocation() {
-		isNetworkEnabled = mLocManager.isProviderEnabled("network");
-		Location loc = null;
-		if (isNetworkEnabled) {
-			if (isNetworkActive) {
-				mLocManager.requestLocationUpdates("network", 1000L, 0.0F, this);
-				LocationManager locationmanager = mLocManager;
-
-				if (locationmanager != null) {
-					loc = mLocManager.getLastKnownLocation("network");
-				}
-			}
-		}
-		return loc;
-	}
+        return format;
+    }
 }
