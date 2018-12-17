@@ -162,7 +162,7 @@ public class SFGeolocationNative extends CordovaPlugin {
 				listenerON = true;
 
 				// Register the listener with the Location Manager to receive location updates
-				locationManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
+				mLocManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
 				return true;
 			} else {
 				PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
