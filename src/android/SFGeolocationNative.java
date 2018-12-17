@@ -80,7 +80,11 @@ public class SFGeolocationNative extends CordovaPlugin {
 							objPosition.put("time", location.getTime());
 							objPosition.put("location_provider", location.getProvider());
 							objPosition.put("formatTime", datetime);
-							objPosition.put("extra", null);
+							if (location.isFromMockProvider() == true) {
+								objGPS.put("is_mocked", true);
+							} else {
+								objGPS.put("is_mocked", false);
+							}
 
 							result = new PluginResult(PluginResult.Status.OK, objPosition);
 			                result.setKeepCallback(true);
