@@ -35,7 +35,7 @@ public class SFGeolocationNative extends CordovaPlugin {
 	private LocationManager mLocManager;
 
 	@Override
-	public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
+	public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) {
 		if (action.equals("getCurrentLocation")) {
 			mLocManager = (LocationManager) this.cordova.getActivity()
 					.getSystemService(Context.LOCATION_SERVICE);
