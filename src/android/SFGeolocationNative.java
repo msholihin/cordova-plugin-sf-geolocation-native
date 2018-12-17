@@ -30,138 +30,123 @@ public class SFGeolocationNative extends CordovaPlugin {
 	private String LOCATION_PROVIDER = "";
 	LocationListener locationListener;
 	private boolean listenerON = false;
-	private String statusMock = "";
 	private JSONArray arrayGPS = new JSONArray();
 	private JSONObject objGPS = new JSONObject();
 
 	@Override
 	public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
-        LocationManager locationManager = (LocationManager) this.cordova.getActivity().getSystemService(Context.LOCATION_SERVICE);
+		LocationManager locationManager = (LocationManager) this.cordova.getActivity()
+				.getSystemService(Context.LOCATION_SERVICE);
 
-        // getting GPS status
-        isGPSEnabled = locationManager
-                .isProviderEnabled(LocationManager.GPS_PROVIDER);
+		// getting GPS status
+		isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
-        // getting network status
-        isNetworkEnabled = locationManager
-                .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+		// getting network status
+		isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
+		if (!isGPSEnabled && !isNetworkEnabled) {
+			// no network provider is enabled
+		} else {
+			if (isGPSEnabled) {
+				LOCATION_PROVIDER = LocationManager.GPS_PROVIDER;
+			}
+			if (isNetworkEnabled) {
+				LOCATION_PROVIDER = LocationManager.NETWORK_PROVIDER;
+			}
+		}
 
-        if(!isGPSEnabled && !isNetworkEnabled) {
-            // no network provider is enabled
-        }else{
-            if(isGPSEnabled){
-                LOCATION_PROVIDER = LocationManager.GPS_PROVIDER;
-            }
-            if(isNetworkEnabled){
-                LOCATION_PROVIDER = LocationManager.NETWORK_PROVIDER;
-            }
-        }
+		if (listenerON != true) {
 
-        if(listenerON != true) {
+			// Define a listener that responds to location updates
+			locationListener = new LocationListener() {
+				public void onLocationChanged(Location location) {
 
-            // Define a listener that responds to location updates
-            locationListener = new LocationListener() {
-                public void onLocationChanged(Location location) {
+					// Called when a new location is found by the network location provider.
 
+					Date dateGPS = new Date(location.getTime());
 
-                    // Called when a new location is found by the network location provider.
+					String datetime = formatDate(dateGPS);
 
-                    Date dateGPS = new Date(location.getTime());
+					Log.e("DATA-GPS", "Lat:" + location.getLatitude() + " - Long:" + location.getLongitude()
+							+ " - Data e hora:" + datetime);
 
-                    String datetime = formatDate(dateGPS);
+					try {
 
-                     Log.e("DATA-GPS", "Lat:" + location.getLatitude() + " - Long:" + location.getLongitude() + " - Data e hora:" + datetime);
+						objGPS.put("latitude", location.getLatitude());
+						objGPS.put("longitude", location.getLongitude());
+						objGPS.put("accuracy", location.getAccuracy());
+						objGPS.put("time", location.getTime());
+						objGPS.put("location_provider", location.getProvider());
+						objGPS.put("formatTime", datetime);
+						objGPS.put("extra", null);
 
-                     try{
+						if (arrayGPS.length() == 0) {
+							arrayGPS.put(objGPS);
+						}
 
-                         objGPS.put("latitude",location.getLatitude());
-                         objGPS.put("longitude",location.getLongitude());
-                         objGPS.put("accuracy", location.getAccuracy());
-                         objGPS.put("time",location.getTime());
-                         objGPS.put("location_provider",location.getProvider());
-                         objGPS.put("formatTime",datetime);
-                         objGPS.put("extra",null);
+						Log.e("GPS-LOCATION-ARRAY", arrayGPS.toString());
 
-                         if (location.isFromMockProvider() == true) {
-                             objGPS.put("info","mock-true");
-                             statusMock = "mock-true";
-                         } else {
-                             objGPS.put("info","mock-false");
-                             statusMock = "mock-false";
-                         }
+						callbackContext.success(arrayGPS);
 
-                         if(arrayGPS.length() == 0){
-                             arrayGPS.put(objGPS);
-                         }
+					} catch (JSONException e) {
+						e.printStackTrace();
+						callbackContext.error(e.toString());
+					}
 
-                         Log.e("GPS-LOCATION-ARRAY", arrayGPS.toString());
+				}
 
-                         callbackContext.success(arrayGPS);
+				public void onStatusChanged(String provider, int status, Bundle extras) {
 
+				}
 
-                     } catch (JSONException e) {
-                        e.printStackTrace();
-                        callbackContext.error(e.toString());
-                     }
+				public void onProviderEnabled(String provider) {
 
+				}
 
-                }
+				public void onProviderDisabled(String provider) {
 
-                public void onStatusChanged(String provider, int status, Bundle extras) {
+				}
+			};
 
-                }
+			// Here, thisActivity is the current activity
+			if (ContextCompat.checkSelfPermission(this.cordova.getActivity(),
+					android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-                public void onProviderEnabled(String provider) {
+				// Should we show an explanation?
+				if (ActivityCompat.shouldShowRequestPermissionRationale(this.cordova.getActivity(),
+						android.Manifest.permission.ACCESS_FINE_LOCATION)) {
 
-                }
+					// Show an explanation to the user *asynchronously* -- don't block
+					// this thread waiting for the user's response! After the user
+					// sees the explanation, try again to request the permission.
 
-                public void onProviderDisabled(String provider) {
+				} else {
 
-                }
-            };
+					// No explanation needed, we can request the permission.
 
-            // Here, thisActivity is the current activity
-            if (ContextCompat.checkSelfPermission(this.cordova.getActivity(),
-                    Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
+					ActivityCompat.requestPermissions(this.cordova.getActivity(),
+							new String[] { android.Manifest.permission.ACCESS_FINE_LOCATION }, MY_PERMISSIONS_REQUEST);
 
-                // Should we show an explanation?
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this.cordova.getActivity(),
-                        Manifest.permission.ACCESS_FINE_LOCATION)) {
+					// MY_PERMISSIONS_REQUEST is an
+					// app-defined int constant. The callback method gets the
+					// result of the request.
+				}
+			}
 
-                    // Show an explanation to the user *asynchronously* -- don't block
-                    // this thread waiting for the user's response! After the user
-                    // sees the explanation, try again to request the permission.
+			listenerON = true;
 
-                } else {
+			// Register the listener with the Location Manager to receive location updates
+			locationManager.requestLocationUpdates(LOCATION_PROVIDER, 15000, 0, locationListener);
 
-                    // No explanation needed, we can request the permission.
-
-                    ActivityCompat.requestPermissions(this.cordova.getActivity(),
-                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                            MY_PERMISSIONS_REQUEST);
-
-                    // MY_PERMISSIONS_REQUEST is an
-                    // app-defined int constant. The callback method gets the
-                    // result of the request.
-                }
-            }
-
-            listenerON = true;
-
-            // Register the listener with the Location Manager to receive location updates
-            locationManager.requestLocationUpdates(LOCATION_PROVIDER, 15000, 0, locationListener);
-
-        }else{
-            callbackContext.success(arrayGPS);
-        }
+		} else {
+			callbackContext.success(arrayGPS);
+		}
 	}
-	
-    private String formatDate(Date date){
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        String format = formatter.format(date);
 
-        return format;
-    }
+	private String formatDate(Date date) {
+		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		String format = formatter.format(date);
+
+		return format;
+	}
 }
