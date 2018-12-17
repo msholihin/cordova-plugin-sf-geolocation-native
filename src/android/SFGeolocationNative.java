@@ -22,6 +22,7 @@ public class SFGeolocationNative extends CordovaPlugin implements LocationListen
 	private double longitude, latitude, accuracy;
 	private String provider;
 	private CallbackContext mCallbackCtx;
+	private boolean result;
 
 	@Override
 	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -52,6 +53,8 @@ public class SFGeolocationNative extends CordovaPlugin implements LocationListen
 					jsonObject.put("longitude", longitude);
 					jsonObject.put("accuracy", accuracy);
 					callbackContext.success(jsonObject);
+					result = true;
+					return result;
 				} else {
 					mLocManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000L, 500.0f,
 							locationListener);
@@ -62,11 +65,13 @@ public class SFGeolocationNative extends CordovaPlugin implements LocationListen
 					if (mLoc == null) {
 						mLoc = getNetworkLocation();
 					}
+					result = false;
+					return result;
 				}
 
-				return true;
+				return result;
 			}
-			return false;
+			return result;
 		} catch (Exception e) {
 			callbackContext.success("---------" + e.getMessage());
 			return false;
