@@ -1,0 +1,23 @@
+{
+  "name": "cordova-plugin-sf-geolocation-native",
+  "version": "0.0.2",
+  "description": "Cordova SF Geolocation Plugin",
+  "cordova": {
+    "id": "cordova-plugin-sf-geolocation-native",
+    "platforms": [
+      "android"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chrystiadi/cordova-plugin-sf-geolocation-native.git"
+  },
+  "keywords": [
+    "cordova",
+    "geolocation",
+    "ecosystem:cordova",
+    "cordova-android"
+  ],
+  "author": "smartfren",
+  "license": "Apache 2.0"
+}

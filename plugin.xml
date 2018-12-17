@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  License or Agreement not specified yet
+-->
+
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:rim="http://www.blackberry.com/ns/widgets"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="cordova-plugin-sf-geolocation-native"
+    version="0.0.1">
+    <name>Device</name>
+    <description>Cordova SF Geolocation Plugin</description>
+    <license>Apache 2.0</license>
+    <keywords>cordova,geolocation</keywords>
+    <repo>https://github.com/chrystiadi/cordova-plugin-sf-geolocation-native.git</repo>
+    <issue>https://issues.apache.org/jira/browse/CB/component/12320648</issue>
+
+    <js-module src="www/sfgeolocationnative.js" name="sfgeolocationnative">
+        <clobbers target="window.plugins.sfgeolocationnative" />
+    </js-module>
+
+    <!-- android -->
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="SFGeolocationNative" >
+                <param name="android-package" value="com.smartfren.cordova.sfgeolocationnative.SFGeolocationNative"/>
+            </feature>
+        </config-file>
+
+        <framework src="com.google.android.gms:play-services-location:9.8.0" />
+
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+        </config-file>
+
+        <source-file src="src/android/SFGeolocationNative.java" target-dir="com/smartfren/cordova/sfgeolocationnative" />
+    </platform>
+
+
+</plugin>
