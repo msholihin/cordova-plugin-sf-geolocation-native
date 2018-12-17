@@ -46,7 +46,7 @@ public class SFGeolocationNative extends CordovaPlugin implements LocationListen
 
 //				jsonObject.put("provider", provider);
 
-				if (latitude == 0.0) {
+				if (latitude != 0.0) {
 					JSONObject jsonObject = new JSONObject();
 					jsonObject.put("latitude", latitude);
 					jsonObject.put("longitude", longitude);
