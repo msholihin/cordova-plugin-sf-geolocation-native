@@ -28,7 +28,6 @@ public class SFGeolocationNative extends CordovaPlugin {
 
 	// flag for network status
 	boolean isNetworkEnabled = false;
-	private String LOCATION_PROVIDER = "";
 	LocationListener locationListener;
 	private boolean listenerON = false;
 	private PluginResult result;
@@ -54,6 +53,7 @@ public class SFGeolocationNative extends CordovaPlugin {
 	            if (location == null) {
 	                location = getNetworkLocation();
 	            }
+	            updateLocation(location, callbackContext);
 			}
 
 			if (!listenerON) {
@@ -63,37 +63,8 @@ public class SFGeolocationNative extends CordovaPlugin {
 					public void onLocationChanged(Location location) {
 
 						// Called when a new location is found by the network location provider.
-
-						Date datePosition = new Date(location.getTime());
-
-						String datetime = formatDate(datePosition);
-
-						Log.e("DATA-Position", "Lat:" + location.getLatitude() + " - Long:" + location.getLongitude()
-								+ " - Data e hora:" + datetime);
-
-						try {
-							objPosition.put("latitude", location.getLatitude());
-							objPosition.put("longitude", location.getLongitude());
-							objPosition.put("accuracy", location.getAccuracy());
-							objPosition.put("time", location.getTime());
-							objPosition.put("location_provider", location.getProvider());
-							objPosition.put("formatTime", datetime);
-							objPosition.put("extra", null);
-
-							result = new PluginResult(PluginResult.Status.OK, objPosition);
-			                result.setKeepCallback(true);
-			                callbackContext.sendPluginResult(result);
-							Log.e("GPS-LOCATION-ARRAY", objPosition.toString());
-
-							
-
-						} catch (JSONException e) {
-							PluginResult result = new PluginResult(PluginResult.Status.JSON_EXCEPTION);
-	                        result.setKeepCallback(true);
-	                        callbackContext.sendPluginResult(result);
-							e.printStackTrace();
-							callbackContext.error(e.toString());
-						}
+						updateLocation(location, callbackContext);
+						
 
 					}
 
@@ -137,8 +108,6 @@ public class SFGeolocationNative extends CordovaPlugin {
 
 				listenerON = true;
 
-				// Register the listener with the Location Manager to receive location updates
-				mLocManager.requestLocationUpdates(LOCATION_PROVIDER, 1000L, 500.0f, locationListener);
 				return true;
 			} else {
 				PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
@@ -178,5 +147,38 @@ public class SFGeolocationNative extends CordovaPlugin {
 			loc = mLocManager.getLastKnownLocation("network");
 		}
 		return loc;
+	}
+	
+	private void updateLocation(Location location, final CallbackContext callbackContext) throws JSONException {
+		Date datePosition = new Date(location.getTime());
+
+		String datetime = formatDate(datePosition);
+
+		Log.e("DATA-Position", "Lat:" + location.getLatitude() + " - Long:" + location.getLongitude()
+				+ " - Data e hora:" + datetime);
+
+		try {
+			objPosition.put("latitude", location.getLatitude());
+			objPosition.put("longitude", location.getLongitude());
+			objPosition.put("accuracy", location.getAccuracy());
+			objPosition.put("time", location.getTime());
+			objPosition.put("location_provider", location.getProvider());
+			objPosition.put("formatTime", datetime);
+			objPosition.put("extra", null);
+
+			result = new PluginResult(PluginResult.Status.OK, objPosition);
+            result.setKeepCallback(true);
+            callbackContext.sendPluginResult(result);
+			Log.e("GPS-LOCATION-ARRAY", objPosition.toString());
+
+			
+
+		} catch (JSONException e) {
+			PluginResult result = new PluginResult(PluginResult.Status.JSON_EXCEPTION);
+            result.setKeepCallback(true);
+            callbackContext.sendPluginResult(result);
+			e.printStackTrace();
+			callbackContext.error(e.toString());
+		}
 	}
 }
