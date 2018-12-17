@@ -35,7 +35,7 @@ public class SFGeolocationNative extends CordovaPlugin {
 	private LocationManager mLocManager;
 
 	@Override
-	public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) {
+	public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
 		if (action.equals("getCurrentLocation")) {
 			mLocManager = (LocationManager) this.cordova.getActivity()
 					.getSystemService(Context.LOCATION_SERVICE);
@@ -149,7 +149,7 @@ public class SFGeolocationNative extends CordovaPlugin {
 		return loc;
 	}
 	
-	private void updateLocation(Location location, final CallbackContext callbackContext) throws JSONException {
+	private void updateLocation(Location location, final CallbackContext callbackContext) {
 		Date datePosition = new Date(location.getTime());
 
 		String datetime = formatDate(datePosition);
