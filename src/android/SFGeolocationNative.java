@@ -44,13 +44,13 @@ public class SFGeolocationNative extends CordovaPlugin implements LocationListen
 					mLoc = getNetworkLocation();
 				}
 
-				JSONObject jsonObject = new JSONObject();
-				jsonObject.put("latitude", latitude);
-				jsonObject.put("longitude", longitude);
-				jsonObject.put("accuracy", accuracy);
 //				jsonObject.put("provider", provider);
 
 				if (latitude == 0.0) {
+					JSONObject jsonObject = new JSONObject();
+					jsonObject.put("latitude", latitude);
+					jsonObject.put("longitude", longitude);
+					jsonObject.put("accuracy", accuracy);
 					callbackContext.success(jsonObject);
 				} else {
 					mLocManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000L, 500.0f,
@@ -92,11 +92,19 @@ public class SFGeolocationNative extends CordovaPlugin implements LocationListen
 
 	private final LocationListener locationListener = new LocationListener() {
 		public void onLocationChanged(Location location) {
+			try {
 			updateWithNewLocation(location);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		public void onProviderDisabled(String provider) {
-			updateWithNewLocation(null);
+			try {
+				updateWithNewLocation(null);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		public void onProviderEnabled(String provider) {
@@ -111,14 +119,14 @@ public class SFGeolocationNative extends CordovaPlugin implements LocationListen
 			latitude = location.getLatitude();
 			longitude = location.getLongitude();
 			accuracy = location.getAccuracy();
-			provider = location.getProvider();
+//			provider = location.getProvider();
 
-			JSONObject jsonObject = new JSONObject();
-			jsonObject.put("latitude", latitude);
-			jsonObject.put("longitude", longitude);
-			jsonObject.put("accuracy", accuracy);
+//			JSONObject jsonObject = new JSONObject();
+//			jsonObject.put("latitude", latitude);
+//			jsonObject.put("longitude", longitude);
+//			jsonObject.put("accuracy", accuracy);
 //			jsonObject.put("provider", provider);
-			mCallbackCtx.success(jsonObject);
+//			mCallbackCtx.success(jsonObject);
 		}
 	}
 
