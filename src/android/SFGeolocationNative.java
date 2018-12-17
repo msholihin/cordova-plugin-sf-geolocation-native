@@ -50,7 +50,7 @@ public class SFGeolocationNative extends CordovaPlugin implements LocationListen
 				jsonObject.put("accuracy", accuracy);
 //				jsonObject.put("provider", provider);
 
-				if (latitude != 0.0) {
+				if (latitude == 0.0) {
 					callbackContext.success(jsonObject);
 				} else {
 					mLocManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000L, 500.0f,
@@ -63,7 +63,7 @@ public class SFGeolocationNative extends CordovaPlugin implements LocationListen
 						mLoc = getNetworkLocation();
 					}
 				}
-				
+
 				return true;
 			}
 			return false;
@@ -117,7 +117,7 @@ public class SFGeolocationNative extends CordovaPlugin implements LocationListen
 			jsonObject.put("latitude", latitude);
 			jsonObject.put("longitude", longitude);
 			jsonObject.put("accuracy", accuracy);
-			jsonObject.put("provider", provider);
+//			jsonObject.put("provider", provider);
 			mCallbackCtx.success(jsonObject);
 		}
 	}
